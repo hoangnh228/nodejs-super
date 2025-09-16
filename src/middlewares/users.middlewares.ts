@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { checkSchema } from 'express-validator'
+import HTTP_STATUS from '~/constants/httpStatus'
+import { USER_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import usersServices from '~/services/users.services'
 import { validate } from '~/utils/validation'
@@ -7,7 +9,7 @@ import { validate } from '~/utils/validation'
 export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' })
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Email and password are required' })
   }
   next()
 }
@@ -16,51 +18,58 @@ export const registerValidator = validate(
   checkSchema({
     name: {
       isLength: { options: { min: 1, max: 100 } },
-      isString: true,
-      notEmpty: true,
+      isString: { errorMessage: USER_MESSAGES.NAME_MUST_BE_A_STRING },
+      notEmpty: { errorMessage: USER_MESSAGES.NAME_IS_REQUIRED },
       trim: true,
-      errorMessage: 'Name must be between 1 and 100 characters'
+      errorMessage: USER_MESSAGES.NAME_MUST_BE_FROM_1_TO_100_CHARACTERS
     },
     email: {
-      isEmail: true,
-      notEmpty: true,
+      isEmail: { errorMessage: USER_MESSAGES.EMAIL_IS_INVALID },
+      notEmpty: { errorMessage: USER_MESSAGES.EMAIL_IS_REQUIRED },
       trim: true,
-      errorMessage: 'Email is required',
+      errorMessage: USER_MESSAGES.EMAIL_IS_REQUIRED,
       custom: {
         options: async (value) => {
           if (await usersServices.checkEmailExists(value)) {
-            throw new Error('Email already exists')
+            throw new Error(USER_MESSAGES.EMAIL_ALREADY_EXISTS)
           }
           return true
         }
       }
     },
     password: {
-      isLength: { options: { min: 6, max: 50 } },
-      isString: true,
-      notEmpty: true,
-      errorMessage: 'Password is required'
+      isLength: { options: { min: 6, max: 50 }, errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_FROM_6_TO_50_CHARACTERS },
+      isString: { errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_A_STRING },
+      notEmpty: { errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED },
+      errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED
     },
     confirm_password: {
-      isLength: { options: { min: 6, max: 50 } },
-      isString: true,
-      notEmpty: true,
+      isLength: {
+        options: { min: 6, max: 50 },
+        errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_FROM_6_TO_50_CHARACTERS
+      },
+      isString: { errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING },
+      notEmpty: { errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED },
       custom: {
         options: (value, { req }) => {
           if (value !== req.body.password) {
-            throw new ErrorWithStatus({ message: 'Password and confirm password must be the same', status: 400 })
+            throw new ErrorWithStatus({
+              message: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
           }
           return true
         }
       },
-      errorMessage: 'Confirm password is required'
+      errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED
     },
     date_of_birth: {
       isISO8601: {
-        options: { strict: true, strictSeparator: true }
+        options: { strict: true, strictSeparator: true },
+        errorMessage: USER_MESSAGES.DATE_OF_BIRTH_MUST_BE_A_DATE
       },
-      notEmpty: true,
-      errorMessage: 'Date of birth is required'
+      notEmpty: { errorMessage: USER_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED },
+      errorMessage: USER_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
     }
   })
 )
