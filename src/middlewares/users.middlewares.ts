@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { checkSchema } from 'express-validator'
+import { ErrorWithStatus } from '~/models/Errors'
 import usersServices from '~/services/users.services'
 import { validate } from '~/utils/validation'
 
@@ -47,7 +48,7 @@ export const registerValidator = validate(
       custom: {
         options: (value, { req }) => {
           if (value !== req.body.password) {
-            throw new Error('Password and confirm password must be the same')
+            throw new ErrorWithStatus({ message: 'Password and confirm password must be the same', status: 400 })
           }
           return true
         }
