@@ -15,5 +15,8 @@ export const USER_MESSAGES = {
   CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD: 'Confirm password must be the same as password',
   DATE_OF_BIRTH_IS_REQUIRED: 'Date of birth is required',
   DATE_OF_BIRTH_MUST_BE_A_DATE: 'Date of birth must be a date',
-  DATE_OF_BIRTH_MUST_BE_IN_THE_PAST: 'Date of birth must be in the past'
+  DATE_OF_BIRTH_MUST_BE_IN_THE_PAST: 'Date of birth must be in the past',
+  EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email or password is incorrect',
+  LOGIN_SUCCESS: 'Login successfully',
+  REGISTER_SUCCESS: 'Register successfully'
 } as const

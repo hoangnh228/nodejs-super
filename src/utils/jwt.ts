@@ -1,4 +1,6 @@
 import { SignOptions, sign } from 'jsonwebtoken'
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const signToken = ({
   payload,

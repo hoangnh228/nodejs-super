@@ -12,7 +12,7 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
 
     const errors = validationResult(req)
     if (errors.isEmpty()) {
-      next()
+      return next()
     }
 
     const errorObject = errors.mapped()
