@@ -3,11 +3,16 @@ import {
   loginValidator,
   registerValidator,
   accessTokenValidator,
-  refreshTokenValidator
+  refreshTokenValidator,
+  emailVerifyTokenValidator
 } from '~/middlewares/users.middlewares'
-import { loginController, logoutController, registerController } from '~/controllers/users.controllers'
+import {
+  loginController,
+  logoutController,
+  registerController,
+  verifyEmailController
+} from '~/controllers/users.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
-import { USER_MESSAGES } from '~/constants/messages'
 
 const usersRouter = Router()
 
@@ -40,5 +45,15 @@ usersRouter.post('/register', registerValidator, wrapRequestHandler(registerCont
  * Error: { message: 'Logout failed', error }
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
+
+/**
+ * Description: Logout a user
+ * Path: /verify-email
+ * Method: POST
+ * Body: { refresh_token }
+ * Response: { message: 'Logout successfully', data: result }
+ * Error: { message: 'Logout failed', error }
+ */
+usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(verifyEmailController))
 
 export default usersRouter
