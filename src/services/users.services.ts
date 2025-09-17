@@ -1,6 +1,6 @@
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import type { SignOptions } from 'jsonwebtoken'
-import { RegisterRequestBody } from '~/models/requests/User.requests'
+import { RegisterRequestBody, ResetPasswordRequestBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import databaseServices from '~/services/database.services'
 import { hashPassword } from '~/utils/crypto'
@@ -13,36 +13,52 @@ dotenv.config()
 
 class UsersService {
   private signAccessToken(userId: string) {
-    return signToken({
-      payload: { user_id: userId, token_type: TokenType.AccessToken },
-      privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
-      options: {
-        expiresIn: (process.env.ACCESS_TOKEN_EXPIRES_IN || '15m') as SignOptions['expiresIn']
-      }
-    })
+    return this.signTokens(
+      userId,
+      TokenType.AccessToken,
+      process.env.JWT_SECRET_ACCESS_TOKEN as string,
+      (process.env.ACCESS_TOKEN_EXPIRES_IN || '15m') as SignOptions['expiresIn']
+    )
   }
 
   private signRefreshToken(userId: string) {
-    return signToken({
-      payload: { user_id: userId, token_type: TokenType.RefreshToken },
-      privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
-      options: {
-        expiresIn: (process.env.REFRESH_TOKEN_EXPIRES_IN || '30d') as SignOptions['expiresIn']
-      }
-    })
+    return this.signTokens(
+      userId,
+      TokenType.RefreshToken,
+      process.env.JWT_SECRET_REFRESH_TOKEN as string,
+      (process.env.REFRESH_TOKEN_EXPIRES_IN || '30d') as SignOptions['expiresIn']
+    )
   }
 
   private signEmailVerifyToken(userId: string) {
+    return this.signTokens(
+      userId,
+      TokenType.EmailVerifyToken,
+      process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
+      (process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN || '7d') as SignOptions['expiresIn']
+    )
+  }
+
+  private signForgotPasswordToken(userId: string) {
+    return this.signTokens(
+      userId,
+      TokenType.ForgotPasswordToken,
+      process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+      (process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN || '7d') as SignOptions['expiresIn']
+    )
+  }
+
+  private signTokens(userId: string, tokenType: TokenType, privateKey: string, expiresIn: SignOptions['expiresIn']) {
     return signToken({
-      payload: { user_id: userId, token_type: TokenType.EmailVerifyToken },
-      privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
+      payload: { user_id: userId, token_type: tokenType },
+      privateKey: privateKey,
       options: {
-        expiresIn: (process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN || '7d') as SignOptions['expiresIn']
+        expiresIn: expiresIn
       }
     })
   }
 
-  private async signTokens(userId: string) {
+  private async signAccessAndRefreshTokens(userId: string) {
     const [accessToken, refreshToken] = await Promise.all([this.signAccessToken(userId), this.signRefreshToken(userId)])
 
     return {
@@ -52,7 +68,7 @@ class UsersService {
   }
 
   async login(userId: string) {
-    const tokens = await this.signTokens(userId)
+    const tokens = await this.signAccessAndRefreshTokens(userId)
     databaseServices.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(userId), token: tokens.refresh_token })
     )
@@ -72,7 +88,7 @@ class UsersService {
       })
     )
 
-    const tokens = await this.signTokens(userId)
+    const tokens = await this.signAccessAndRefreshTokens(userId)
     await databaseServices.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(userId), token: tokens.refresh_token })
     )
@@ -90,7 +106,7 @@ class UsersService {
 
   async verifyEmail(userId: string) {
     const [tokens] = await Promise.all([
-      this.signTokens(userId),
+      this.signAccessAndRefreshTokens(userId),
       databaseServices.users.updateOne(
         { _id: new ObjectId(userId) },
         [{ $set: { verify: UserVerifyStatus.Verified, email_verify_token: '', updated_at: '$$NOW' } }]
@@ -109,6 +125,24 @@ class UsersService {
     )
     console.log('emailVerifyToken', emailVerifyToken)
     return { message: USER_MESSAGES.RESEND_VERIFY_EMAIL_SUCCESS }
+  }
+
+  async forgotPassword(userId: string) {
+    const forgotPasswordToken = await this.signForgotPasswordToken(userId)
+    await databaseServices.users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { forgot_password_token: forgotPasswordToken }, $currentDate: { updated_at: true } }
+    )
+    console.log('forgotPasswordToken', forgotPasswordToken)
+    return { message: USER_MESSAGES.FORGOT_PASSWORD_SUCCESS }
+  }
+
+  async resetPassword(userId: string, password: string) {
+    await databaseServices.users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { password: hashPassword(password), forgot_password_token: '' }, $currentDate: { updated_at: true } }
+    )
+    return { message: USER_MESSAGES.RESET_PASSWORD_SUCCESS }
   }
 }
 

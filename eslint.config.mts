@@ -1,34 +1,34 @@
-import js from "@eslint/js";
-import globals from "globals";
-import tseslint from "typescript-eslint";
-import { defineConfig } from "eslint/config";
-import eslintPluginPrettier from "eslint-plugin-prettier";
+import js from '@eslint/js'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
+import { defineConfig } from 'eslint/config'
+import eslintPluginPrettier from 'eslint-plugin-prettier'
 
 export default defineConfig([
   {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
     plugins: { js, eslintPluginPrettier },
-    extends: ["js/recommended"],
+    extends: ['js/recommended'],
     languageOptions: { globals: globals.node },
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "prettier/prettier": [
-        "warn",
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'prettier/prettier': [
+        'warn',
         {
-          arrowParens: "always",
+          arrowParens: 'always',
           semi: false,
-          trailingComma: "none",
+          trailingComma: 'none',
           tabWidth: 2,
-          endOfLine: "auto",
+          endOfLine: 'auto',
           useTabs: false,
           singleQuote: true,
           printWidth: 120,
-          jsxSingleQuote: true,
-        },
-      ],
+          jsxSingleQuote: true
+        }
+      ]
     },
-    ignores: ["**/node_modules/", "**/dist/"],
+    ignores: ['**/node_modules/', '**/dist/']
   },
-  tseslint.configs.recommended,
-]);
+  tseslint.configs.recommended
+])
