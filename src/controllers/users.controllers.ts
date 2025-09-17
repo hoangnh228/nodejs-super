@@ -1,15 +1,21 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import usersServices from '~/services/users.services'
-import { LogoutRequestBody, RegisterRequestBody } from '~/models/requests/User.requests'
+import {
+  LoginRequestBody,
+  LogoutRequestBody,
+  RegisterRequestBody,
+  VerifyEmailRequestBody
+} from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { ObjectId } from 'mongodb'
 import { USER_MESSAGES } from '~/constants/messages'
 import { JwtPayload } from 'jsonwebtoken'
 import HTTP_STATUS from '~/constants/httpStatus'
 import databaseServices from '~/services/database.services'
+import { UserVerifyStatus } from '~/constants/enum'
 
-export const loginController = async (req: Request, res: Response) => {
+export const loginController = async (req: Request<ParamsDictionary, any, LoginRequestBody>, res: Response) => {
   const user = req.user as User
   const userId = user._id as ObjectId
   const result = await usersServices.login(userId.toString())
@@ -35,9 +41,12 @@ export const logoutController = async (req: Request<ParamsDictionary, any, Logou
   })
 }
 
-export const verifyEmailController = async (req: Request, res: Response, next: NextFunction) => {
+export const verifyEmailController = async (
+  req: Request<ParamsDictionary, any, VerifyEmailRequestBody>,
+  res: Response
+) => {
   const { user_id } = req.decoded_email_verify_token as JwtPayload
-  const user = await databaseServices.users.findOne({ _id: new ObjectId(user_id) })
+  const user = await databaseServices.users.findOne({ _id: new ObjectId(user_id as string) })
   if (!user) {
     return res.status(HTTP_STATUS.NOT_FOUND).json({
       message: USER_MESSAGES.USER_NOT_FOUND
@@ -55,4 +64,23 @@ export const verifyEmailController = async (req: Request, res: Response, next: N
     message: USER_MESSAGES.VERIFY_EMAIL_SUCCESS,
     data: result
   })
+}
+
+export const resendVerifyEmailController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as JwtPayload
+  const user = await databaseServices.users.findOne({ _id: new ObjectId(user_id as string) })
+  if (!user) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      message: USER_MESSAGES.USER_NOT_FOUND
+    })
+  }
+
+  if (user.verify === UserVerifyStatus.Verified) {
+    return res.status(HTTP_STATUS.OK).json({
+      message: USER_MESSAGES.EMAIL_ALREADY_VERIFIED
+    })
+  }
+
+  const result = await usersServices.resendVerifyEmail(user_id)
+  res.json(result)
 }

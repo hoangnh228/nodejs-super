@@ -10,6 +10,7 @@ import {
   loginController,
   logoutController,
   registerController,
+  resendVerifyEmailController,
   verifyEmailController
 } from '~/controllers/users.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -31,8 +32,6 @@ usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
  * Path: /register
  * Method: POST
  * Body: { name, email, password, confirm_password, date_of_birth }
- * Response: { message: 'Register successfully', data: result }
- * Error: { message: 'Register failed', error }
  */
 usersRouter.post('/register', registerValidator, wrapRequestHandler(registerController))
 
@@ -41,19 +40,23 @@ usersRouter.post('/register', registerValidator, wrapRequestHandler(registerCont
  * Path: /logout
  * Method: POST
  * Body: { refresh_token }
- * Response: { message: 'Logout successfully', data: result }
- * Error: { message: 'Logout failed', error }
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
 
 /**
- * Description: Logout a user
+ * Description: Verify email
  * Path: /verify-email
  * Method: POST
- * Body: { refresh_token }
- * Response: { message: 'Logout successfully', data: result }
- * Error: { message: 'Logout failed', error }
+ * Body: { email_verify_token }
  */
 usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(verifyEmailController))
+
+/**
+ * Description: Resend verify email
+ * Path: /resend-verify-email
+ * Method: POST
+ * Body: {}
+ */
+usersRouter.post('/resend-verify-email', accessTokenValidator, wrapRequestHandler(resendVerifyEmailController))
 
 export default usersRouter
