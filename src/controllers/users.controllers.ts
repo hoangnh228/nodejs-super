@@ -20,9 +20,8 @@ import databaseServices from '~/services/database.services'
 import { UserVerifyStatus } from '~/constants/enum'
 
 export const loginController = async (req: Request<ParamsDictionary, any, LoginRequestBody>, res: Response) => {
-  const user = req.user as User
-  const userId = user._id as ObjectId
-  const result = await usersServices.login(userId.toString())
+  const { _id, verify } = req.user as User
+  const result = await usersServices.login({ userId: (_id as ObjectId).toString(), verify })
 
   res.json({
     message: USER_MESSAGES.LOGIN_SUCCESS,
@@ -93,8 +92,8 @@ export const forgotPasswordController = async (
   req: Request<ParamsDictionary, any, ForgotPasswordRequestBody>,
   res: Response
 ) => {
-  const { _id } = req.user as User
-  const result = await usersServices.forgotPassword((_id as ObjectId).toString())
+  const { _id, verify } = req.user as User
+  const result = await usersServices.forgotPassword({ userId: (_id as ObjectId).toString(), verify })
   res.json(result)
 }
 
@@ -125,3 +124,5 @@ export const getMeController = async (req: Request, res: Response) => {
     data: user
   })
 }
+
+export const updateMeController = async (req: Request, res: Response) => {}
