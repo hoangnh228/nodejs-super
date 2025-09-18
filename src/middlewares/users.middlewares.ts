@@ -95,6 +95,51 @@ const forgotPasswordTokenSchema: ParamSchema = {
   }
 }
 
+const nameSchema: ParamSchema = {
+  isLength: { options: { min: 1, max: 100 } },
+  isString: { errorMessage: USER_MESSAGES.NAME_MUST_BE_A_STRING },
+  notEmpty: { errorMessage: USER_MESSAGES.NAME_IS_REQUIRED },
+  trim: true,
+  errorMessage: USER_MESSAGES.NAME_MUST_BE_FROM_1_TO_100_CHARACTERS
+}
+
+const dateOfBirthSchema: ParamSchema = {
+  isISO8601: {
+    options: { strict: true, strictSeparator: true },
+    errorMessage: USER_MESSAGES.DATE_OF_BIRTH_MUST_BE_A_DATE
+  },
+  notEmpty: { errorMessage: USER_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED },
+  errorMessage: USER_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
+}
+
+const imageUrlSchema: ParamSchema = {
+  optional: true,
+  isString: { errorMessage: USER_MESSAGES.IMAGE_URL_MUST_BE_A_STRING },
+  trim: true,
+  isLength: { options: { min: 1, max: 400 }, errorMessage: USER_MESSAGES.IMAGE_URL_LENGTH }
+}
+
+const followedUserIdSchema: ParamSchema = {
+  custom: {
+    options: async (value, { req }) => {
+      if (!ObjectId.isValid(value)) {
+        throw new ErrorWithStatus({
+          message: USER_MESSAGES.INVALID_USER_ID,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+
+      const user = await databaseServices.users.findOne({ _id: new ObjectId(value as ObjectId) })
+      if (user === null) {
+        throw new ErrorWithStatus({
+          message: USER_MESSAGES.USER_NOT_FOUND,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+    }
+  }
+}
+
 export const loginValidator = validate(
   checkSchema(
     {
@@ -127,13 +172,7 @@ export const loginValidator = validate(
 export const registerValidator = validate(
   checkSchema(
     {
-      name: {
-        isLength: { options: { min: 1, max: 100 } },
-        isString: { errorMessage: USER_MESSAGES.NAME_MUST_BE_A_STRING },
-        notEmpty: { errorMessage: USER_MESSAGES.NAME_IS_REQUIRED },
-        trim: true,
-        errorMessage: USER_MESSAGES.NAME_MUST_BE_FROM_1_TO_100_CHARACTERS
-      },
+      name: nameSchema,
       email: {
         isEmail: { errorMessage: USER_MESSAGES.EMAIL_IS_INVALID },
         notEmpty: { errorMessage: USER_MESSAGES.EMAIL_IS_REQUIRED },
@@ -150,14 +189,7 @@ export const registerValidator = validate(
       },
       password: passwordSchema,
       confirm_password: confirmPasswordSchema,
-      date_of_birth: {
-        isISO8601: {
-          options: { strict: true, strictSeparator: true },
-          errorMessage: USER_MESSAGES.DATE_OF_BIRTH_MUST_BE_A_DATE
-        },
-        notEmpty: { errorMessage: USER_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED },
-        errorMessage: USER_MESSAGES.DATE_OF_BIRTH_IS_REQUIRED
-      }
+      date_of_birth: dateOfBirthSchema
     },
     ['body']
   )
@@ -347,3 +379,57 @@ export const verifyUserValidator = (req: Request, res: Response, next: NextFunct
   }
   next()
 }
+
+export const updateMeValidator = validate(
+  checkSchema(
+    {
+      name: { ...nameSchema, optional: true, notEmpty: undefined },
+      date_of_birth: { ...dateOfBirthSchema, optional: true },
+      bio: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.BIO_MUST_BE_A_STRING },
+        trim: true,
+        isLength: { options: { min: 1, max: 250 }, errorMessage: USER_MESSAGES.BIO_LENGTH }
+      },
+      location: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.LOCATION_MUST_BE_A_STRING },
+        trim: true,
+        isLength: { options: { min: 1, max: 250 }, errorMessage: USER_MESSAGES.LOCATION_LENGTH }
+      },
+      website: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.WEBSITE_MUST_BE_A_STRING },
+        trim: true,
+        isLength: { options: { min: 1, max: 200 }, errorMessage: USER_MESSAGES.WEBSITE_LENGTH }
+      },
+      username: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.USERNAME_MUST_BE_A_STRING },
+        trim: true,
+        isLength: { options: { min: 1, max: 50 }, errorMessage: USER_MESSAGES.USERNAME_LENGTH }
+      },
+      avatar: imageUrlSchema,
+      cover_photo: imageUrlSchema
+    },
+    ['body']
+  )
+)
+
+export const followUserValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: followedUserIdSchema
+    },
+    ['body']
+  )
+)
+
+export const unfollowUserValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: followedUserIdSchema
+    },
+    ['params']
+  )
+)

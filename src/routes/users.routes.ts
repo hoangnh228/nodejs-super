@@ -8,11 +8,14 @@ import {
   forgotPasswordValidator,
   verifyForgotPasswordValidator,
   resetPasswordValidator,
-  verifyUserValidator
+  verifyUserValidator,
+  followUserValidator,
+  unfollowUserValidator
 } from '~/middlewares/users.middlewares'
 import {
   forgotPasswordController,
   getMeController,
+  getUserProfileController,
   loginController,
   logoutController,
   registerController,
@@ -20,9 +23,13 @@ import {
   resetPasswordController,
   updateMeController,
   verifyEmailController,
-  verifyForgotPasswordController
+  verifyForgotPasswordController,
+  followUserController,
+  unfollowUserController
 } from '~/controllers/users.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
+import { filterMiddleware } from '~/middlewares/common.middleware'
+import { UpdateMeRequestBody } from '~/models/requests/User.requests'
 
 const usersRouter = Router()
 
@@ -111,6 +118,57 @@ usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController)
  * Header: { Authorization: Bearer <access_token> }
  * Body: UserSchema
  */
-usersRouter.patch('/me', accessTokenValidator, verifyUserValidator, wrapRequestHandler(updateMeController))
+usersRouter.patch(
+  '/me',
+  accessTokenValidator,
+  verifyUserValidator,
+  filterMiddleware<UpdateMeRequestBody>([
+    'name',
+    'date_of_birth',
+    'bio',
+    'location',
+    'website',
+    'username',
+    'avatar',
+    'cover_photo'
+  ]),
+  wrapRequestHandler(updateMeController)
+)
+
+/**
+ * Description: Get user profile
+ * Path: /:username
+ * Method: GET
+ */
+usersRouter.get('/:username', accessTokenValidator, wrapRequestHandler(getUserProfileController))
+
+/**
+ * Description: Follow a user
+ * Path: /follow
+ * Method: POST
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: { follow_user_id }
+ */
+usersRouter.post(
+  '/follow',
+  accessTokenValidator,
+  verifyUserValidator,
+  followUserValidator,
+  wrapRequestHandler(followUserController)
+)
+
+/**
+ * Description: Unfollow a user
+ * Path: /follow/:followed_user_id
+ * Method: DELETE
+ * Header: { Authorization: Bearer <access_token> }
+ */
+usersRouter.delete(
+  '/follow/:followed_user_id',
+  accessTokenValidator,
+  verifyUserValidator,
+  unfollowUserValidator,
+  wrapRequestHandler(unfollowUserController)
+)
 
 export default usersRouter

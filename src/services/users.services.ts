@@ -1,6 +1,6 @@
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import type { SignOptions } from 'jsonwebtoken'
-import { RegisterRequestBody, ResetPasswordRequestBody } from '~/models/requests/User.requests'
+import { RegisterRequestBody, ResetPasswordRequestBody, UpdateMeRequestBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import databaseServices from '~/services/database.services'
 import { hashPassword } from '~/utils/crypto'
@@ -9,6 +9,9 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import dotenv from 'dotenv'
 import { USER_MESSAGES } from '~/constants/messages'
+import Follower from '~/models/schemas/Follower.schema'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 dotenv.config()
 
 class UsersService {
@@ -163,6 +166,49 @@ class UsersService {
       { _id: new ObjectId(userId) },
       { projection: { password: 0, email_verify_token: 0, forgot_password_token: 0 } }
     )
+  }
+
+  async updateMe(userId: string, body: UpdateMeRequestBody) {
+    const _body = body.date_of_birth ? { ...body, date_of_birth: new Date(body.date_of_birth) } : body
+    return await databaseServices.users.findOneAndUpdate(
+      { _id: new ObjectId(userId) },
+      { $set: _body as UpdateMeRequestBody & { date_of_birth?: Date }, $currentDate: { updated_at: true } },
+      { returnDocument: 'after', projection: { password: 0, email_verify_token: 0, forgot_password_token: 0 } }
+    )
+  }
+
+  async getUserProfile(username: string) {
+    return await databaseServices.users.findOne(
+      { username },
+      { projection: { password: 0, email_verify_token: 0, forgot_password_token: 0 } }
+    )
+  }
+
+  async followUser(userId: string, followUserId: string) {
+    const follower = await databaseServices.followers.findOne({
+      user_id: new ObjectId(userId),
+      followed_user_id: new ObjectId(followUserId)
+    })
+
+    if (follower) {
+      throw new ErrorWithStatus({
+        message: USER_MESSAGES.USER_ALREADY_FOLLOWED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    await databaseServices.followers.insertOne(
+      new Follower({ user_id: new ObjectId(userId), followed_user_id: new ObjectId(followUserId) })
+    )
+    return { message: USER_MESSAGES.FOLLOW_USER_SUCCESS }
+  }
+
+  async unfollowUser(userId: string, followUserId: string) {
+    await databaseServices.followers.deleteOne({
+      user_id: new ObjectId(userId),
+      followed_user_id: new ObjectId(followUserId)
+    })
+    return { message: USER_MESSAGES.UNFOLLOW_USER_SUCCESS }
   }
 }
 

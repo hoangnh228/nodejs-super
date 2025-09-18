@@ -38,3 +38,26 @@ export interface ResetPasswordRequestBody {
   password: string
   confirm_password: string
 }
+
+export interface UpdateMeRequestBody {
+  name?: string
+  date_of_birth?: string
+  bio?: string
+  location?: string
+  website?: string
+  username?: string
+  avatar?: string
+  cover_photo?: string
+}
+
+export interface GetProfileReqParams {
+  username: string
+}
+
+export interface FollowUserRequestBody {
+  followed_user_id: string
+}
+
+export interface UnfollowUserRequestBody {
+  followed_user_id: string
+}
