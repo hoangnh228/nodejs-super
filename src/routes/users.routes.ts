@@ -28,7 +28,8 @@ import {
   verifyForgotPasswordController,
   followUserController,
   unfollowUserController,
-  changePasswordController
+  changePasswordController,
+  oauthGoogleController
 } from '~/controllers/users.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { filterMiddleware } from '~/middlewares/common.middleware'
@@ -45,6 +46,14 @@ const usersRouter = Router()
  * Error: { message: 'Login failed', error }
  */
 usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
+
+/**
+ * Description: Login a user with Google
+ * Path: /oauth/google
+ * Method: GET
+ * Query: { code }
+ */
+usersRouter.get('/oauth/google', wrapRequestHandler(oauthGoogleController))
 
 /**
  * Description: Register a new user

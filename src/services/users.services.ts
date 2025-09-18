@@ -130,6 +130,10 @@ class UsersService {
       )
     ])
 
+    await databaseServices.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(userId), token: tokens.refresh_token })
+    )
+
     return tokens
   }
 
@@ -217,6 +221,82 @@ class UsersService {
       { $set: { password: hashPassword(newPassword) }, $currentDate: { updated_at: true } }
     )
     return { message: USER_MESSAGES.CHANGE_PASSWORD_SUCCESS }
+  }
+
+  private async getGoogleOAuthToken(code: string) {
+    const body = {
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      grant_type: 'authorization_code'
+    }
+
+    const { data } = await axios.post('https://oauth2.googleapis.com/token', body, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+
+    return data as { id_token: string; access_token: string }
+  }
+
+  private async getGoogleUser(accessToken: string, idToken: string) {
+    const { data } = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+      params: {
+        access_token: accessToken,
+        alt: 'json',
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      }
+    })
+
+    return data as {
+      id: string
+      email: string
+      name: string
+      verified_email: boolean
+      given_name: string
+      family_name: string
+      picture: string
+      locale: string
+    }
+  }
+
+  async oauthGoogle(code: string) {
+    const { id_token, access_token } = await this.getGoogleOAuthToken(code)
+    const userInfo = await this.getGoogleUser(access_token, id_token)
+
+    if (!userInfo.verified_email) {
+      throw new ErrorWithStatus({
+        message: USER_MESSAGES.GOOGLE_EMAIL_NOT_VERIFIED,
+        status: HTTP_STATUS.UNAUTHORIZED
+      })
+    }
+
+    const user = await databaseServices.users.findOne({ email: userInfo.email })
+    if (user) {
+      const userId = user._id.toString()
+      const [tokens] = await Promise.all([this.signAccessAndRefreshTokens({ userId, verify: user.verify })])
+
+      await databaseServices.refreshTokens.insertOne(
+        new RefreshToken({ user_id: new ObjectId(userId), token: tokens.refresh_token })
+      )
+
+      return { ...tokens, newUser: 0, verify: user.verify }
+    }
+
+    const password = Math.random().toString(36).substring(2, 15)
+    const data = await this.register({
+      email: userInfo.email,
+      name: userInfo.name,
+      password,
+      confirm_password: password,
+      date_of_birth: new Date().toISOString()
+    })
+
+    return { ...data, newUser: 1, verify: UserVerifyStatus.Unverified }
   }
 }
 

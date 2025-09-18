@@ -59,5 +59,6 @@ export const USER_MESSAGES = {
     'Username must be from 1 to 50 characters and can only contain letters, numbers, and underscores',
   USERNAME_ALREADY_EXISTS: 'Username already exists',
   OLD_PASSWORD_IS_INCORRECT: 'Old password is incorrect',
-  CHANGE_PASSWORD_SUCCESS: 'Change password successfully'
+  CHANGE_PASSWORD_SUCCESS: 'Change password successfully',
+  GOOGLE_EMAIL_NOT_VERIFIED: 'Google email not verified'
 } as const
