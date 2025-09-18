@@ -10,7 +10,8 @@ import {
   resetPasswordValidator,
   verifyUserValidator,
   followUserValidator,
-  unfollowUserValidator
+  unfollowUserValidator,
+  updateMeValidator
 } from '~/middlewares/users.middlewares'
 import {
   forgotPasswordController,
@@ -122,6 +123,7 @@ usersRouter.patch(
   '/me',
   accessTokenValidator,
   verifyUserValidator,
+  updateMeValidator,
   filterMiddleware<UpdateMeRequestBody>([
     'name',
     'date_of_birth',
