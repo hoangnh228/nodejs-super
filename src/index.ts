@@ -10,7 +10,10 @@ import { UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import cors from 'cors'
 dotenv.config()
 
-databaseService.connect()
+databaseService.connect().then(() => {
+  databaseService.indexUsers()
+})
+
 const app = express()
 app.use(cors())
 const port = process.env.PORT || 4000
