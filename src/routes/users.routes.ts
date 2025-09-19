@@ -29,7 +29,8 @@ import {
   followUserController,
   unfollowUserController,
   changePasswordController,
-  oauthGoogleController
+  oauthGoogleController,
+  refreshTokenController
 } from '~/controllers/users.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { filterMiddleware } from '~/middlewares/common.middleware'
@@ -70,6 +71,14 @@ usersRouter.post('/register', registerValidator, wrapRequestHandler(registerCont
  * Body: { refresh_token }
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
+
+/**
+ * Description: Logout a user
+ * Path: /refresh-token
+ * Method: POST
+ * Body: { refresh_token }
+ */
+usersRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(refreshTokenController))
 
 /**
  * Description: Verify email

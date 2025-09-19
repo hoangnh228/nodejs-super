@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import formidable from 'formidable'
 import fs from 'fs'
+import { nanoid } from 'nanoid'
 import path from 'path'
 import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from '~/constants/dir'
 
@@ -51,8 +52,11 @@ export const getNameFromFileName = (fileName: string) => {
 }
 
 export const handleUploadVideo = (req: Request) => {
+  const idName = nanoid()
+  const folderPath = path.resolve(UPLOAD_VIDEO_DIR, idName)
+  fs.mkdirSync(folderPath, { recursive: true })
   const form = formidable({
-    uploadDir: UPLOAD_VIDEO_DIR,
+    uploadDir: folderPath,
     maxFiles: 1,
     keepExtensions: true,
     maxFileSize: 50000 * 1024, // 50MB
@@ -63,6 +67,9 @@ export const handleUploadVideo = (req: Request) => {
         return false
       }
       return isValid
+    },
+    filename: (name, ext, part, form) => {
+      return `${idName}${ext}`
     }
   })
 
@@ -75,12 +82,14 @@ export const handleUploadVideo = (req: Request) => {
       if (!Boolean(files.video)) {
         return reject(new Error('File is required'))
       }
-      const videos = files.video as formidable.File[]
-      videos.forEach((video) => {
-        const extension = getExtensionFromFileName(video.originalFilename ?? '')
-        fs.renameSync(video.filepath, video.filepath + '.' + extension)
-        video.newFilename = video.newFilename + '.' + extension
-      })
+
+      // const videos = files.video as formidable.File[]
+      // videos.forEach((video) => {
+      //   const ext = getExtensionFromFileName(video.originalFilename ?? '')
+      //   fs.renameSync(video.filepath, video.filepath + '.' + ext)
+      //   video.newFilename = video.newFilename + '.' + ext
+      //   video.filepath = video.filepath + '.' + ext
+      // })
 
       resolve(files.video as formidable.File[])
     })

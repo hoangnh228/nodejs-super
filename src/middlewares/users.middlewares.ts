@@ -255,7 +255,7 @@ export const refreshTokenValidator = validate(
               const [decoded, refreshToken] = await Promise.all([
                 verifyToken({
                   token: value,
-                  scretOrPublicKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
+                  scretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string
                 }) as Promise<JwtPayload>,
                 databaseServices.refreshTokens.findOne({ token: value })
               ])

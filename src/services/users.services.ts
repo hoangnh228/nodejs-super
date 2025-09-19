@@ -1,10 +1,10 @@
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
-import type { SignOptions } from 'jsonwebtoken'
+import type { JwtPayload, SignOptions } from 'jsonwebtoken'
 import { RegisterRequestBody, ResetPasswordRequestBody, UpdateMeRequestBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import databaseServices from '~/services/database.services'
 import { hashPassword } from '~/utils/crypto'
-import { signToken } from '~/utils/jwt'
+import { signToken, verifyToken } from '~/utils/jwt'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { ObjectId } from 'mongodb'
 import dotenv from 'dotenv'
@@ -118,6 +118,27 @@ class UsersService {
 
   async logout(refreshToken: string) {
     return await databaseServices.refreshTokens.deleteOne({ token: refreshToken })
+  }
+
+  async refreshToken({
+    userId,
+    verify,
+    refreshToken
+  }: {
+    userId: string
+    verify: UserVerifyStatus
+    refreshToken: string
+  }) {
+    const [tokens] = await Promise.all([
+      this.signAccessAndRefreshTokens({ userId, verify }),
+      databaseServices.refreshTokens.deleteOne({ token: refreshToken })
+    ])
+
+    await databaseServices.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(userId), token: tokens.refresh_token })
+    )
+
+    return tokens
   }
 
   async verifyEmail(userId: string) {

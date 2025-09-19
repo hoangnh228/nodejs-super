@@ -62,5 +62,7 @@ export const USER_MESSAGES = {
   CHANGE_PASSWORD_SUCCESS: 'Change password successfully',
   GOOGLE_EMAIL_NOT_VERIFIED: 'Google email not verified',
   UPLOAD_IMAGE_SUCCESS: 'Upload image successfully',
-  UPLOAD_VIDEO_SUCCESS: 'Upload video successfully'
+  UPLOAD_VIDEO_SUCCESS: 'Upload video successfully',
+  REFRESH_TOKEN_SUCCESS: 'Refresh token successfully',
+  GET_VIDEO_STATUS_SUCCESS: 'Get video status successfully'
 } as const

@@ -34,6 +34,14 @@ export const uploadVideoController = async (req: Request, res: Response) => {
   })
 }
 
+export const uploadVideoHLSController = async (req: Request, res: Response) => {
+  const url = await mediaServices.handleUploadVideoHLS(req)
+  return res.json({
+    message: USER_MESSAGES.UPLOAD_VIDEO_SUCCESS,
+    data: url
+  })
+}
+
 export const serveVideoStreamController = (req: Request, res: Response) => {
   const range = req.headers.range
   if (!range) {
@@ -57,4 +65,35 @@ export const serveVideoStreamController = (req: Request, res: Response) => {
   res.writeHead(HTTP_STATUS.PARTIAL_CONTENT, headers)
   const videoStream = fs.createReadStream(videoPath, { start, end })
   videoStream.pipe(res)
+}
+
+export const serveM3u8Controller = (req: Request, res: Response) => {
+  const { id } = req.params
+  res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8'), (error) => {
+    if (error) {
+      return res.status((error as any).status).json({
+        message: (error as any).message
+      })
+    }
+  })
+}
+
+export const serveSegmentController = (req: Request, res: Response) => {
+  const { id, video, segment } = req.params
+  res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, video, segment), (error) => {
+    if (error) {
+      return res.status((error as any).status).json({
+        message: (error as any).message
+      })
+    }
+  })
+}
+
+export const getVideoStatusController = async (req: Request, res: Response) => {
+  const { name } = req.params
+  const videoStatus = await mediaServices.getVideoStatus(name)
+  return res.json({
+    message: USER_MESSAGES.GET_VIDEO_STATUS_SUCCESS,
+    data: videoStatus
+  })
 }
