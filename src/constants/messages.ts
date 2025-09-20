@@ -64,7 +64,8 @@ export const USER_MESSAGES = {
   UPLOAD_IMAGE_SUCCESS: 'Upload image successfully',
   UPLOAD_VIDEO_SUCCESS: 'Upload video successfully',
   REFRESH_TOKEN_SUCCESS: 'Refresh token successfully',
-  GET_VIDEO_STATUS_SUCCESS: 'Get video status successfully'
+  GET_VIDEO_STATUS_SUCCESS: 'Get video status successfully',
+  USER_NOT_IN_TWITTER_CIRCLE: 'User not in Twitter circle'
 } as const
 
 export const TWEET_MESSAGES = {
@@ -83,7 +84,9 @@ export const TWEET_MESSAGES = {
   HASHTAG_MUST_BE_A_STRING: 'Hashtag must be a string',
   INVALID_MENTION_ID: 'Invalid mention ID',
   INVALID_MEDIA: 'Invalid media',
-  TWEET_CREATED_SUCCESS: 'Tweet created successfully'
+  TWEET_CREATED_SUCCESS: 'Tweet created successfully',
+  INVALID_TWEET_ID: 'Invalid tweet ID',
+  TWEET_FOUND_SUCCESS: 'Tweet found successfully'
 } as const
 
 export const BOOKMARK_MESSAGES = {

@@ -1,5 +1,6 @@
 import User from '~/models/schemas/User.schema'
 import { JwtPayload } from 'jsonwebtoken'
+import Tweet from '~/models/schemas/Tweet.schema'
 
 declare module 'express' {
   interface Request {
@@ -8,5 +9,6 @@ declare module 'express' {
     decoded_refresh_token?: JwtPayload
     decoded_email_verify_token?: JwtPayload
     decoded_forgot_password_token?: JwtPayload
+    tweet?: Tweet
   }
 }

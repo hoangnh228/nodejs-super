@@ -37,6 +37,10 @@ class TweetService {
 
     return databaseServices.tweets.findOne({ _id: insertTweet.insertedId })
   }
+
+  async getTweet(tweet_id: string) {
+    return databaseServices.tweets.findOne({ _id: new ObjectId(tweet_id) })
+  }
 }
 
 export default new TweetService()

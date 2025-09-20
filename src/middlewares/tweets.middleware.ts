@@ -1,11 +1,18 @@
 import { validate } from '~/utils/validation'
 import { checkSchema } from 'express-validator'
-import { MediaType, TweetType } from '~/constants/enum'
+import { MediaType, TweetType, UserVerifyStatus } from '~/constants/enum'
 import { TweetAudience } from '~/constants/enum'
 import { numberEnumToArray } from '~/utils/commons'
-import { TWEET_MESSAGES } from '~/constants/messages'
+import { TWEET_MESSAGES, USER_MESSAGES } from '~/constants/messages'
 import { ObjectId } from 'mongodb'
 import { isEmpty } from 'lodash'
+import databaseServices from '~/services/database.services'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
+import { NextFunction, Request, Response } from 'express'
+import Tweet from '~/models/schemas/Tweet.schema'
+import { TokenPayload } from '~/models/requests/User.requests'
+import { wrapRequestHandler } from '~/utils/handlers'
 
 const tweetType = numberEnumToArray(TweetType)
 const tweetAudience = numberEnumToArray(TweetAudience)
@@ -101,3 +108,56 @@ export const createTweetValidator = validate(
     ['body']
   )
 )
+
+export const tweetIdValidator = validate(
+  checkSchema(
+    {
+      tweet_id: {
+        custom: {
+          options: async (value, { req }) => {
+            if (!ObjectId.isValid(value)) {
+              throw new ErrorWithStatus({
+                message: TWEET_MESSAGES.INVALID_TWEET_ID,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
+            const tweet = await databaseServices.tweets.findOne({ _id: new ObjectId(value as ObjectId) })
+            if (!tweet) {
+              throw new ErrorWithStatus({
+                message: TWEET_MESSAGES.INVALID_TWEET_ID,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            req.tweet = tweet
+            return true
+          }
+        }
+      }
+    },
+    ['params', 'body']
+  )
+)
+
+// if use async await in handler express, must be use try catch
+// unless use wrapRequestHandler
+export const audienceValidator = wrapRequestHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const tweet = req.tweet as Tweet
+  if (tweet.audience === TweetAudience.TwitterCircle) {
+    if (!req.decoded_authorization) {
+      throw new ErrorWithStatus({ message: USER_MESSAGES.ACCESS_TOKEN_IS_REQUIRED, status: HTTP_STATUS.UNAUTHORIZED })
+    }
+
+    const author = await databaseServices.users.findOne({ _id: tweet.user_id })
+    if (!author || author.verify === UserVerifyStatus.Banned) {
+      throw new ErrorWithStatus({ message: USER_MESSAGES.USER_NOT_FOUND, status: HTTP_STATUS.NOT_FOUND })
+    }
+
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const isInTwitterCircle = author.twitter_circle?.some((user_circle_id) => user_circle_id.equals(user_id))
+    if (!author._id.equals(user_id) && !isInTwitterCircle) {
+      throw new ErrorWithStatus({ message: USER_MESSAGES.USER_NOT_IN_TWITTER_CIRCLE, status: HTTP_STATUS.FORBIDDEN })
+    }
+  }
+  return next()
+})
