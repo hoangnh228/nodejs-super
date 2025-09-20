@@ -12,6 +12,9 @@ dotenv.config()
 
 databaseService.connect().then(() => {
   databaseService.indexUsers()
+  databaseService.indexRefreshTokens()
+  databaseService.indexVideoStatuses()
+  databaseService.indexFollowers()
 })
 
 const app = express()
