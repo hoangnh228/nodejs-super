@@ -66,3 +66,32 @@ export const USER_MESSAGES = {
   REFRESH_TOKEN_SUCCESS: 'Refresh token successfully',
   GET_VIDEO_STATUS_SUCCESS: 'Get video status successfully'
 } as const
+
+export const TWEET_MESSAGES = {
+  VALIDATION_ERROR: 'Validation error',
+  INVALID_TYPE: 'Invalid type',
+  INVALID_AUDIENCE: 'Invalid audience',
+  TWEET_AUDIENCE_IS_REQUIRED: 'Tweet audience is required',
+  TWEET_CONTENT_IS_REQUIRED: 'Tweet content is required',
+  TWEET_PARENT_ID_IS_REQUIRED: 'Tweet parent ID is required',
+  TWEET_HASHTAGS_IS_REQUIRED: 'Tweet hashtags is required',
+  TWEET_MENTIONS_IS_REQUIRED: 'Tweet mentions is required',
+  TWEET_MEDIAS_IS_REQUIRED: 'Tweet medias is required',
+  INVALID_PARENT_ID: 'Invalid Tweet parent ID',
+  PARENT_ID_MUST_BE_NULL: 'Tweet parent ID must be null',
+  TWEET_CONTENT_MUST_BE_EMPTY: 'Tweet content must be empty',
+  HASHTAG_MUST_BE_A_STRING: 'Hashtag must be a string',
+  INVALID_MENTION_ID: 'Invalid mention ID',
+  INVALID_MEDIA: 'Invalid media',
+  TWEET_CREATED_SUCCESS: 'Tweet created successfully'
+} as const
+
+export const BOOKMARK_MESSAGES = {
+  BOOKMARK_CREATED_SUCCESS: 'Bookmark created successfully',
+  BOOKMARK_UNCREATED_SUCCESS: 'Bookmark uncreated successfully'
+} as const
+
+export const LIKE_MESSAGES = {
+  LIKE_CREATED_SUCCESS: 'Like created successfully',
+  LIKE_UNCREATED_SUCCESS: 'Like uncreated successfully'
+} as const

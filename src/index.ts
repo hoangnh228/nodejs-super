@@ -8,6 +8,9 @@ import dotenv from 'dotenv'
 import staticRouter from '~/routes/static.routes'
 import { UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import cors from 'cors'
+import tweetRouter from '~/routes/tweets.routes'
+import bookmarkRouter from '~/routes/bookmarks.routes'
+import likeRouter from '~/routes/likes.routes'
 dotenv.config()
 
 databaseService.connect().then(() => {
@@ -32,6 +35,9 @@ app.use(express.json())
 app.use('/users', usersRouter)
 app.use('/media', mediaRouter)
 app.use('/static', staticRouter)
+app.use('/tweets', tweetRouter)
+app.use('/bookmarks', bookmarkRouter)
+app.use('/likes', likeRouter)
 // app.use('/static', express.static(UPLOAD_IMAGE_DIR))
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 
