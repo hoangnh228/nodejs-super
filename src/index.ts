@@ -11,6 +11,8 @@ import cors from 'cors'
 import tweetRouter from '~/routes/tweets.routes'
 import bookmarkRouter from '~/routes/bookmarks.routes'
 import likeRouter from '~/routes/likes.routes'
+// import '~/utils/fake'
+
 dotenv.config()
 
 databaseService.connect().then(() => {
