@@ -413,7 +413,7 @@ class TweetService {
       tweet.user_views = (tweet.user_views ?? 0) + 1
     })
 
-    return { tweets, total: total?.[0]?.total ?? 0 }
+    return { tweets, total: total[0]?.total ?? 0 }
   }
 }
 

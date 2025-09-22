@@ -100,3 +100,7 @@ export const LIKE_MESSAGES = {
   LIKE_CREATED_SUCCESS: 'Like created successfully',
   LIKE_UNCREATED_SUCCESS: 'Like uncreated successfully'
 } as const
+
+export const SEARCH_MESSAGES = {
+  SEARCH_SUCCESS: 'Search successfully'
+} as const

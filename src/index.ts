@@ -11,6 +11,7 @@ import cors from 'cors'
 import tweetRouter from '~/routes/tweets.routes'
 import bookmarkRouter from '~/routes/bookmarks.routes'
 import likeRouter from '~/routes/likes.routes'
+import searchRouter from '~/routes/search.routes'
 // import '~/utils/fake'
 
 dotenv.config()
@@ -20,6 +21,7 @@ databaseService.connect().then(() => {
   databaseService.indexRefreshTokens()
   databaseService.indexVideoStatuses()
   databaseService.indexFollowers()
+  databaseService.indexTweets()
 })
 
 const app = express()
@@ -40,6 +42,7 @@ app.use('/static', staticRouter)
 app.use('/tweets', tweetRouter)
 app.use('/bookmarks', bookmarkRouter)
 app.use('/likes', likeRouter)
+app.use('/search', searchRouter)
 // app.use('/static', express.static(UPLOAD_IMAGE_DIR))
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 
