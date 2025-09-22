@@ -100,3 +100,16 @@ export const getExtensionFromFileName = (fileName: string) => {
   const nameArr = fileName.split('.')
   return nameArr[nameArr.length - 1]
 }
+
+export const getFiles = (dir: string, files: string[] = []) => {
+  const fileList = fs.readdirSync(dir)
+  fileList.forEach((file) => {
+    const name = `${dir}/${file}`
+    if (fs.statSync(name).isDirectory()) {
+      getFiles(name, files)
+    } else {
+      files.push(name)
+    }
+  })
+  return files
+}

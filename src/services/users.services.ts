@@ -17,6 +17,7 @@ import { USER_MESSAGES } from '~/constants/messages'
 import Follower from '~/models/schemas/Follower.schema'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { sendVerifyEmail } from '~/utils/email'
 dotenv.config()
 
 class UsersService {
@@ -141,7 +142,15 @@ class UsersService {
 
     const tokens = await this.signAccessAndRefreshTokens({ userId, verify: UserVerifyStatus.Unverified })
     await this.insertRefreshToken(userId, tokens.refresh_token)
+
     console.log('emailVerifyToken', emailVerifyToken)
+    // await sendVerifyEmail(
+    //   payload.email,
+    //   'Verify your email',
+    //   `<h1>Verify your email</h1>
+    // <p>Click <a href="${process.env.FRONTEND_URL}/verify-email?token=${emailVerifyToken}">here</a> to verify your email</p>`
+    // )
+
     return tokens
   }
 

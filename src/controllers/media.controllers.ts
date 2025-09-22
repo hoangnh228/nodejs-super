@@ -6,6 +6,7 @@ import path from 'path'
 import HTTP_STATUS from '~/constants/httpStatus'
 import fs from 'fs'
 import mime from 'mime'
+import { sendFileFromS3 } from '~/utils/s3'
 
 export const uploadImageController = async (req: Request, res: Response) => {
   const url = await mediaServices.handleUploadImage(req)
@@ -69,24 +70,26 @@ export const serveVideoStreamController = (req: Request, res: Response) => {
 
 export const serveM3u8Controller = (req: Request, res: Response) => {
   const { id } = req.params
-  res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8'), (error) => {
-    if (error) {
-      return res.status((error as any).status).json({
-        message: (error as any).message
-      })
-    }
-  })
+  sendFileFromS3(res, `videos-hls/${id}/master.m3u8`)
+  // res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8'), (error) => {
+  //   if (error) {
+  //     return res.status((error as any).status).json({
+  //       message: (error as any).message
+  //     })
+  //   }
+  // })
 }
 
 export const serveSegmentController = (req: Request, res: Response) => {
   const { id, video, segment } = req.params
-  res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, video, segment), (error) => {
-    if (error) {
-      return res.status((error as any).status).json({
-        message: (error as any).message
-      })
-    }
-  })
+  sendFileFromS3(res, `videos-hls/${id}/${video}/${segment}`)
+  // res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, video, segment), (error) => {
+  //   if (error) {
+  //     return res.status((error as any).status).json({
+  //       message: (error as any).message
+  //     })
+  //   }
+  // })
 }
 
 export const getVideoStatusController = async (req: Request, res: Response) => {
