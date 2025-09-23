@@ -11,6 +11,7 @@ import { ErrorWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
 import databaseServices from '~/services/database.services'
 import usersServices from '~/services/users.services'
+import { verifyAccessToken } from '~/utils/commons'
 import { hashPassword } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
@@ -120,7 +121,7 @@ const imageUrlSchema: ParamSchema = {
   isLength: { options: { min: 1, max: 400 }, errorMessage: USER_MESSAGES.IMAGE_URL_LENGTH }
 }
 
-const followedUserIdSchema: ParamSchema = {
+const userIdSchema: ParamSchema = {
   custom: {
     options: async (value, { req }) => {
       if (!ObjectId.isValid(value)) {
@@ -204,31 +205,7 @@ export const accessTokenValidator = validate(
         custom: {
           options: async (value: string, { req }) => {
             const accessToken = (value || '').split(' ')[1]
-            if (!accessToken) {
-              throw new ErrorWithStatus({
-                message: USER_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              })
-            }
-
-            try {
-              const decoded = await verifyToken({
-                token: accessToken,
-                scretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
-              })
-              ;(req as Request).decoded_authorization = decoded
-            } catch (error) {
-              if (error) {
-                throw new ErrorWithStatus({
-                  message: capitalize((error as JsonWebTokenError).message),
-                  status: HTTP_STATUS.UNAUTHORIZED
-                })
-              }
-
-              throw error
-            }
-
-            return true
+            return await verifyAccessToken(accessToken, req as Request)
           }
         }
       }
@@ -432,7 +409,7 @@ export const updateMeValidator = validate(
 export const followUserValidator = validate(
   checkSchema(
     {
-      followed_user_id: followedUserIdSchema
+      followed_user_id: userIdSchema
     },
     ['body']
   )
@@ -441,7 +418,7 @@ export const followUserValidator = validate(
 export const unfollowUserValidator = validate(
   checkSchema(
     {
-      followed_user_id: followedUserIdSchema
+      followed_user_id: userIdSchema
     },
     ['params']
   )
@@ -485,3 +462,12 @@ export const isUserLoggedInValidator = (middleware: (req: Request, res: Response
     return next()
   }
 }
+
+export const getConversationValidator = validate(
+  checkSchema(
+    {
+      receiver_id: userIdSchema
+    },
+    ['params']
+  )
+)

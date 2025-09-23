@@ -12,6 +12,9 @@ import tweetRouter from '~/routes/tweets.routes'
 import bookmarkRouter from '~/routes/bookmarks.routes'
 import likeRouter from '~/routes/likes.routes'
 import searchRouter from '~/routes/search.routes'
+import { createServer } from 'http'
+import conversationsRouter from '~/routes/conversations.routes'
+import initSocket from '~/utils/socket'
 // import '~/utils/fake'
 
 dotenv.config()
@@ -25,6 +28,7 @@ databaseService.connect().then(() => {
 })
 
 const app = express()
+const httpServer = createServer(app)
 app.use(cors())
 const port = process.env.PORT || 4000
 
@@ -43,10 +47,13 @@ app.use('/tweets', tweetRouter)
 app.use('/bookmarks', bookmarkRouter)
 app.use('/likes', likeRouter)
 app.use('/search', searchRouter)
+app.use('/conversations', conversationsRouter)
 // app.use('/static', express.static(UPLOAD_IMAGE_DIR))
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
-
 app.use(defaultErrorHandler)
-app.listen(port, () => {
+
+initSocket(httpServer)
+
+httpServer.listen(port, () => {
   console.log(`Server is running on port ${port}`)
 })
